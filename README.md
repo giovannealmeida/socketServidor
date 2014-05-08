@@ -1,4 +1,3 @@
 socketServidor
 ==============
-
 Codificação do servidor
