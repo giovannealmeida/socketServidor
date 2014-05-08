@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class Servidor extends Thread{
 
     private ServerSocket socketServer;
-    public static String arquivoCliente;
+    public String arquivoCliente;
     public String arquivoResposta;
     public volatile boolean status = false;
     
