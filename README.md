@@ -1,0 +1,4 @@
+socketServidor
+==============
+
+Codificação do servidor
