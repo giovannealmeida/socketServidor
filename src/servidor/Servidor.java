@@ -54,6 +54,7 @@ public class Servidor extends Thread{
                 BufferedReader doCliente = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
                 DataOutputStream paraCliente = new DataOutputStream(conexao.getOutputStream());
                 arquivoCliente = doCliente.readLine();
+
                 System.out.println("Respondendo solicitação...");
 //                paraCliente.writeBytes(achaArquivos(arquivoCliente).toString());
                 paraCliente.writeBytes(arquivoCliente+" respondido!");
