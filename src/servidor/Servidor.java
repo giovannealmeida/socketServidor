@@ -55,6 +55,12 @@ public class Servidor extends Thread{
                 DataOutputStream paraCliente = new DataOutputStream(conexao.getOutputStream());
                 arquivoCliente = doCliente.readLine();
                 System.out.println("Comando recebido "+arquivoCliente);
+                arquivoCliente = arquivoCliente + " visto pelo servidor";
+//                paraCliente.writeBytes(achaArquivos(arquivoCliente).toString());
+                paraCliente.writeBytes(arquivoCliente);
+                System.out.println("Requisição enviada!");
+                paraCliente.close();
+                conexao.close();
                 if(!status)
                     return;
             }
