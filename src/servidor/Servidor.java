@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -46,19 +44,25 @@ public class Servidor extends Thread{
             File arquivosEncontrados [];
             
             while (status) {
-                if(socketServer == null || !socketServer.isBound())
+                if(socketServer == null || !socketServer.isBound()){
                     socketServer = new ServerSocket(6789);
+                    System.out.println("Servidor esperando na porta 6789...");
+                }
                 System.out.println("Server ON");
                 Socket conexao = socketServer.accept();
                 System.out.println("Status: "+status);
                 BufferedReader doCliente = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
                 DataOutputStream paraCliente = new DataOutputStream(conexao.getOutputStream());
                 arquivoCliente = doCliente.readLine();
-                System.out.println("Comando recebido "+arquivoCliente);
+                System.out.println("Respondendo solicitação...");
+//                paraCliente.writeBytes(achaArquivos(arquivoCliente).toString());
+                paraCliente.writeBytes(arquivoCliente+" respondido!");
+                System.out.println("Solicitação respondida!");
+                paraCliente.close();
+                conexao.close();
                 if(!status)
                     return;
             }
-            
         } catch (IOException ex) {
             System.out.println("Socket do servidor fechado enquanto esperava cliente!!");
         }
