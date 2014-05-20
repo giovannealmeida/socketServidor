@@ -70,8 +70,9 @@ public class Servidor extends Thread {
                     socketOut.write(cbuffer, 0, bytesRead);
                     socketOut.flush();
                 }
-
-
+                System.out.println("Arquivo enviado!");
+                conexao.close();
+                socketOut.close();
                 /*
                  System.out.println("Server ON");
                  Socket conexao = socketServer.accept();
