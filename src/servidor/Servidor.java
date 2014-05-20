@@ -3,8 +3,10 @@ package servidor;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -12,21 +14,21 @@ import java.net.Socket;
  *
  * @author Giovanne
  */
-public class Servidor extends Thread{
+public class Servidor extends Thread {
 
     private ServerSocket socketServer;
     public String arquivoCliente;
     public String arquivoResposta;
     public volatile boolean status = false;
-    
-    public void setStatus(boolean status){
+
+    public void setStatus(boolean status) {
         this.status = status;
     }
-    
-    public boolean getStatus(){
+
+    public boolean getStatus() {
         return status;
     }
-    
+
     private File[] achaArquivos(String diretorio) {
         File dir = new File(diretorio);
         File fList[] = dir.listFiles();
@@ -35,41 +37,65 @@ public class Servidor extends Thread{
         }
         return fList;
     }
-    
+
     @Override
-    public void run(){
+    public void run() {
         this.status = true;
         System.out.println("Iniciando thread");
         try {
-            File arquivosEncontrados [];
-            
+            OutputStream socketOut = null;
+            ServerSocket servsock = null;
+            FileInputStream fileIn = null;
+
+            File arquivosEncontrados[];
+
             while (status) {
-                if(socketServer == null || !socketServer.isBound()){
+                if (socketServer == null || !socketServer.isBound()) {
                     socketServer = new ServerSocket(6789);
                     System.out.println("Servidor esperando na porta 6789...");
                 }
-                System.out.println("Server ON");
+
                 Socket conexao = socketServer.accept();
-                System.out.println("Status: "+status);
                 BufferedReader doCliente = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
-                DataOutputStream paraCliente = new DataOutputStream(conexao.getOutputStream());
                 arquivoCliente = doCliente.readLine();
 
-                System.out.println("Respondendo solicitação...");
-//                paraCliente.writeBytes(achaArquivos(arquivoCliente).toString());
-                paraCliente.writeBytes(arquivoCliente+" respondido!");
-                System.out.println("Solicitação respondida!");
-                paraCliente.close();
-                conexao.close();
-                if(!status)
-                    return;
+                byte[] cbuffer = new byte[1024];
+                int bytesRead;
+
+                File file = new File(arquivoCliente);
+                fileIn = new FileInputStream(file);
+
+                socketOut = conexao.getOutputStream();
+                while ((bytesRead = fileIn.read(cbuffer)) != -1) {
+                    socketOut.write(cbuffer, 0, bytesRead);
+                    socketOut.flush();
+                }
+
+
+                /*
+                 System.out.println("Server ON");
+                 Socket conexao = socketServer.accept();
+                 System.out.println("Status: " + status);
+                 BufferedReader doCliente = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
+                 DataOutputStream paraCliente = new DataOutputStream(conexao.getOutputStream());
+                 arquivoCliente = doCliente.readLine();
+
+                 System.out.println("Respondendo solicitação...");
+                 //                paraCliente.writeBytes(achaArquivos(arquivoCliente).toString());
+                 paraCliente.writeBytes(arquivoCliente + " respondido!");
+                 System.out.println("Solicitação respondida!");
+                 paraCliente.close();
+                 conexao.close();
+                 if (!status) {
+                 return;
+                 }*/
             }
         } catch (IOException ex) {
             System.out.println("Socket do servidor fechado enquanto esperava cliente!!");
         }
     }
-    
-    public void kill(){
+
+    public void kill() {
         this.status = false;
         try {
             socketServer.close();
