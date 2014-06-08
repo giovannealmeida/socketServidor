@@ -1,14 +1,16 @@
 package servidor;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -17,6 +19,8 @@ import java.net.Socket;
 public class Servidor extends Thread {
 
     private ServerSocket socketServer;
+    OutputStream socketOut = null;
+    ServerSocket servsock = null;
     public String arquivoCliente;
     public String arquivoResposta;
     public volatile boolean status = false;
@@ -43,8 +47,6 @@ public class Servidor extends Thread {
         this.status = true;
         System.out.println("Iniciando thread");
         try {
-            OutputStream socketOut = null;
-            ServerSocket servsock = null;
             FileInputStream fileIn = null;
 
             File arquivosEncontrados[];
@@ -56,16 +58,28 @@ public class Servidor extends Thread {
                 }
 
                 Socket conexao = socketServer.accept();
+                socketOut = conexao.getOutputStream();
                 BufferedReader doCliente = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
                 arquivoCliente = doCliente.readLine();
 
+                byte[] flagBuffer = new byte[1];
                 byte[] cbuffer = new byte[1024];
                 int bytesRead;
 
-                File file = new File(arquivoCliente);
-                fileIn = new FileInputStream(file);
-
-                socketOut = conexao.getOutputStream();
+                try {
+                    File file = new File(arquivoCliente);
+                    System.out.println("Arquivo a ser buscado: " + file);
+                    fileIn = new FileInputStream(file);
+                    System.out.println("Input stream: " + fileIn);
+                } catch (FileNotFoundException ex) {
+                    //Escrevedo a flag de falha -- erro no arquivo
+                    socketOut.write(flagBuffer, 0, 0);
+                    conexao.close();
+                    socketOut.close();
+                    continue;
+                }
+                //Escrevedo a flag de sucesso -- arquivo encontrado
+                socketOut.write(flagBuffer, 0, 1);
                 while ((bytesRead = fileIn.read(cbuffer)) != -1) {
                     socketOut.write(cbuffer, 0, bytesRead);
                     socketOut.flush();
@@ -73,23 +87,6 @@ public class Servidor extends Thread {
                 System.out.println("Arquivo enviado!");
                 conexao.close();
                 socketOut.close();
-                /*
-                 System.out.println("Server ON");
-                 Socket conexao = socketServer.accept();
-                 System.out.println("Status: " + status);
-                 BufferedReader doCliente = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
-                 DataOutputStream paraCliente = new DataOutputStream(conexao.getOutputStream());
-                 arquivoCliente = doCliente.readLine();
-
-                 System.out.println("Respondendo solicitação...");
-                 //                paraCliente.writeBytes(achaArquivos(arquivoCliente).toString());
-                 paraCliente.writeBytes(arquivoCliente + " respondido!");
-                 System.out.println("Solicitação respondida!");
-                 paraCliente.close();
-                 conexao.close();
-                 if (!status) {
-                 return;
-                 }*/
             }
         } catch (IOException ex) {
             System.out.println("Socket do servidor fechado enquanto esperava cliente!!");
