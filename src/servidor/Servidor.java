@@ -1,6 +1,7 @@
 package servidor;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -9,8 +10,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -31,15 +30,6 @@ public class Servidor extends Thread {
 
     public boolean getStatus() {
         return status;
-    }
-
-    private File[] achaArquivos(String diretorio) {
-        File dir = new File(diretorio);
-        File fList[] = dir.listFiles();
-        for (int i = 0; i < fList.length; i++) {
-            System.out.println(fList[i]);
-        }
-        return fList;
     }
 
     @Override
@@ -65,10 +55,10 @@ public class Servidor extends Thread {
                 byte[] flagBuffer = new byte[1];
                 byte[] cbuffer = new byte[1024];
                 int bytesRead;
-
+                
+                File file = new File(arquivoCliente);
+                System.out.println("Arquivo a ser buscado: " + file);
                 try {
-                    File file = new File(arquivoCliente);
-                    System.out.println("Arquivo a ser buscado: " + file);
                     fileIn = new FileInputStream(file);
                     System.out.println("Input stream: " + fileIn);
                 } catch (FileNotFoundException ex) {
@@ -78,8 +68,15 @@ public class Servidor extends Thread {
                     socketOut.close();
                     continue;
                 }
+                
                 //Escrevedo a flag de sucesso -- arquivo encontrado
                 socketOut.write(flagBuffer, 0, 1);
+                //Escrevedo o tamanho do arquivo
+                byte[] tamanhoBuffer = new byte[1024];
+                
+                new DataOutputStream(socketOut).writeLong(file.length());
+                
+                int i = 0;
                 while ((bytesRead = fileIn.read(cbuffer)) != -1) {
                     socketOut.write(cbuffer, 0, bytesRead);
                     socketOut.flush();
